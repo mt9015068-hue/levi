@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gióng TTS Studio - Minimalist Voice Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #0c0d11;
+      --card-bg: rgba(20, 22, 31, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary: #f39c12;
+      --primary-hover: #e67e22;
+      --accent: #d35400;
+      --text: #f0f2f5;
+      --text-muted: #8b949e;
+      --active-glow: rgba(243, 156, 18, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2.5rem 1rem;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(211, 84, 0, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(243, 156, 18, 0.08) 0px, transparent 50%);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 860px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(24px);
+      border-radius: 24px;
+      padding: 2.5rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 1.85rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fff 40%, var(--primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 0.4rem;
+    }
+
+    .api-key-group {
+      margin-bottom: 1.5rem;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 0.8rem 1rem;
+      border-radius: 12px;
+      border: 1px dashed var(--card-border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .api-key-group label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .api-key-group input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    .presets {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .preset-card {
+      border: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.02);
+      padding: 1.25rem;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .preset-card:hover {
+      border-color: rgba(243, 156, 18, 0.5);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .preset-card.active {
+      border-color: var(--primary);
+      background: var(--active-glow);
+      box-shadow: 0 0 20px rgba(243, 156, 18, 0.15);
+    }
+
+    .preset-title {
+      font-weight: 600;
+      font-size: 1.05rem;
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .preset-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .input-section {
+      margin-bottom: 1.5rem;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1rem;
+      color: var(--text);
+      font-size: 0.95rem;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 1.25rem;
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+    }
+
+    .control-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .control-label {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--primary);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .visualizer-card {
+      margin-bottom: 1.5rem;
+      border-radius: 16px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 0.75rem;
+      border: 1px solid var(--card-border);
+    }
+
+    canvas {
+      width: 100%;
+      height: 70px;
+      display: block;
+      border-radius: 10px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 0.9rem 1.5rem;
+      border-radius: 14px;
+      border: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.6rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .status-text {
+      font-size: 0.85rem;
+      text-align: center;
+      margin-top: 1rem;
+      color: var(--text-muted);
+      min-height: 1.2rem;
+    }
+
+    @media (max-width: 600px) {
+      .presets { grid-template-columns: 1fr; }
+      .actions { flex-direction: column; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Gióng Voice Synthesis Studio</h1>
+      <p>Tái hiện âm sắc phi thường & tráng khí Hào Hùng của Phù Đổng Thiên Vương</p>
+    </header>
+
+    <!-- API Key Input -->
+    <div class="api-key-group">
+      <label for="apiKey">ElevenLabs API Key:</label>
+      <input type="password" id="apiKey" placeholder="Điền API key (xi-api-key) của bạn tại đây...">
+    </div>
+
+    <!-- Presets -->
+    <div class="presets">
+      <div class="preset-card active" id="preset1" onclick="applyPreset('p1')">
+        <div class="preset-title">
+          <span>👶</span> Voice 1: Gióng Tiền Định
+        </div>
+        <div class="preset-desc">
+          Bé trai 3 tuổi, âm sắc đĩnh đạc, không ngọng, uy nghiêm dội vang khác thường.
+        </div>
+      </div>
+
+      <div class="preset-card" id="preset2" onclick="applyPreset('p2')">
+        <div class="preset-title">
+          <span>🛡️</span> Voice 2: Gióng Xuất Trận
+        </div>
+        <div class="preset-desc">
+          Tráng sĩ trưởng thành, hào sảng, uy lực chấn động với tiếng vang kim khí dội lại.
+        </div>
+      </div>
+    </div>
+
+    <!-- Khung nhập nội dung thoại -->
+    <div class="input-section">
+      <textarea id="ttsText" placeholder="Nhập lời thoại cần truyền tải... (Ví dụ: Ta là tướng nhà Trời! Mau rèn ngựa sắt, áo giáp sắt, roi sắt để ta dẹp giặc!)">Mẹ hãy ra bảo sứ giả vào đây. Nhờ sứ giả về tâu với vua rèn cho ta một con ngựa sắt, một thanh gươm sắt, một giáp sắt và một nón sắt, ta sẽ đánh tan giặc này!</textarea>
+    </div>
+
+    <!-- Audio Controls -->
+    <div class="controls-grid">
+      <div class="control-item">
+        <div class="control-label">
+          <span>Tốc độ (Speed)</span>
+          <span id="rateVal">1.0x</span>
+        </div>
+        <input type="range" id="rateSlider" min="0.6" max="1.5" step="0.05" value="1.0" oninput="updateControls()">
+      </div>
+
+      <div class="control-item">
+        <div class="control-label">
+          <span>Cao độ & Tần số (Pitch/Tone)</span>
+          <span id="pitchVal">Trầm vang</span>
+        </div>
+        <input type="range" id="pitchSlider" min="-8" max="8" step="1" value="-2" oninput="updateControls()">
+      </div>
+
+      <div class="control-item">
+        <div class="control-label">
+          <span>Độ vang kim khí (Resonance/Reverb)</span>
+          <span id="reverbVal">45%</span>
+        </div>
+        <input type="range" id="reverbSlider" min="0" max="1" step="0.05" value="0.45" oninput="updateControls()">
+      </div>
+    </div>
+
+    <!-- Waveform Visualizer -->
+    <div class="visualizer-card">
+      <canvas id="waveformCanvas"></canvas>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn btn-primary" id="playBtn" onclick="handleGenerateAndPlay()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <span id="playBtnText">Tạo âm & Nghe thử</span>
+      </button>
+
+      <button class="btn btn-secondary" id="downloadBtn" onclick="handleDownload()" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        Tải file âm thanh (.wav)
+      </button>
+    </div>
+
+    <div class="status-text" id="statusMessage">Sẵn sàng khởi tạo âm thanh</div>
+  </div>
+
+  <script>
+    /* =========================================================================
+       1. CẤU HÌNH THÔNG SỐ & PRESET GIỌNG NHÂN VẬT
+       ========================================================================= */
+    const PRESETS = {
+      p1: {
+        name: "Gióng Tiền Định (3 tuổi)",
+        // Gợi ý ID voice ElevenLabs: Bạn có thể thay bằng Voice ID chất giọng trẻ em/nam trẻ đĩnh đạc
+        // Mặc định dưới đây là một voice tiếng Việt tự nhiên, kết hợp bộ lọc âm AudioContext để biến hóa
+        voiceId: "cgSgspJ2msm6clMCkdW9", // Thay bằng Voice ID ElevenLabs phù hợp
+        stability: 0.65,      // Giữ sự đĩnh đạc, ổn định, tránh ngọng
+        similarity_boost: 0.85,
+        style: 0.2,           // Nghiêm túc, dứt khoát
+        speed: 1.05,          // Tiết tấu dứt khoát nhưng không vội vã
+        pitchFreq: 400,       // Tần số lọc âm: giữ âm trong của trẻ nhưng có điểm nhấn
+        reverbWet: 0.35       // Độ vang uy nghiêm nhẹ
+      },
+      p2: {
+        name: "Gióng Xuất Trận (Tráng sĩ trưởng thành)",
+        voiceId: "JBFqnCBsd6RMkjVDRZzb", // Voice nam hào sảng, uy lực (ví dụ: George/Adam style)
+        stability: 0.45,      // Tăng biểu cảm hào sảng, bùng nổ
+        similarity_boost: 0.88,
+        style: 0.65,          // Kịch tính, oai dũng
+        speed: 0.95,          // Nhịp điệu dõng dạc, đĩnh đạc
+        pitchFreq: 140,       // Boost tần số trầm sâu (Bass/Sub-bass)
+        reverbWet: 0.65       // Vang vọng kim khí lớn
+      }
+    };
+
+    let currentPreset = 'p1';
+    let audioCtx = null;
+    let audioBuffer = null;
+    let sourceNode = null;
+    let analyserNode = null;
+    let processedBlob = null;
+    let isPlaying = false;
+
+    // Gán thông số mặc định cho Preset
+    function applyPreset(presetKey) {
+      currentPreset = presetKey;
+      document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
+      document.getElementById(presetKey === 'p1' ? 'preset1' : 'preset2').classList.add('active');
+
+      const p = PRESETS[presetKey];
+      document.getElementById('rateSlider').value = p.speed;
+      document.getElementById('rateVal').innerText = p.speed + 'x';
+
+      document.getElementById('reverbSlider').value = p.reverbWet;
+      document.getElementById('reverbVal').innerText = Math.round(p.reverbWet * 100) + '%';
+
+      if (presetKey === 'p1') {
+        document.getElementById('pitchSlider').value = 1;
+        document.getElementById('pitchVal').innerText = "Thanh dứt khoát";
+      } else {
+        document.getElementById('pitchSlider').value = -3;
+        document.getElementById('pitchVal').innerText = "Trầm hùng khí phách";
+      }
+    }
+
+    function updateControls() {
+      const rate = document.getElementById('rateSlider').value;
+      const reverb = document.getElementById('reverbSlider').value;
+      const pitch = document.getElementById('pitchSlider').value;
+
+      document.getElementById('rateVal').innerText = rate + 'x';
+      document.getElementById('reverbVal').innerText = Math.round(reverb * 100) + '%';
+      document.getElementById('pitchVal').innerText = pitch > 0 ? `+${pitch} (Sáng)` : (pitch < 0 ? `${pitch} (Trầm)` : 'Cân bằng');
+    }
+
+    /* =========================================================================
+       2. GỌI API ELEVENLABS VỚI CÁC THÔNG SỐ TỐI ƯU TIẾNG VIỆT
+       ========================================================================= */
+    async function fetchElevenLabsTTS(text, apiKey, presetConfig) {
+      const voiceId = presetConfig.voiceId;
+      const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Accept': 'audio/mpeg',
+          'xi-api-key': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: text,
+          model_id: "eleven_multilingual_v2", // Mô hình hỗ trợ tiếng Việt tốt nhất
+          voice_settings: {
+            stability: presetConfig.stability,
+            similarity_boost: presetConfig.similarity_boost,
+            style: presetConfig.style,
+            use_speaker_boost: true
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => null);
+        throw new Error(errJson?.detail?.message || `Lỗi API (${response.status})`);
+      }
+
+      return await response.arrayBuffer();
+    }
+
+    /* =========================================================================
+       3. BỘ XỬ LÝ ÂM THANH (DSP): BASS BOOST, REVERB & HIỆU ỨNG KIM KHÍ
+       ========================================================================= */
+    function initAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    // Tạo Impulse Response mô phỏng tiếng vang kim loại/giáp sắt
+    function createMetallicImpulseResponse(ctx, duration = 1.8, decay = 2.0) {
+      const sampleRate = ctx.sampleRate;
+      const length = sampleRate * duration;
+      const impulse = ctx.createBuffer(2, length, sampleRate);
+      const left = impulse.getChannelData(0);
+      const right = impulse.getChannelData(1);
+
+      for (let i = 0; i < length; i++) {
+        // Tần số cộng hưởng kim loại dội lại
+        const metallicMod = Math.sin(i / 15) * 0.2;
+        const n = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+        left[i] = (n + metallicMod);
+        right[i] = (n - metallicMod);
+      }
+      return impulse;
+    }
+
+    /* =========================================================================
+       4. PHÁT ÂM THANH & RENDER SÓNG ÂM
+       ========================================================================= */
+    async function handleGenerateAndPlay() {
+      if (isPlaying) {
+        stopAudio();
+        return;
+      }
+
+      const apiKey = document.getElementById('apiKey').value.trim();
+      const text = document.getElementById('ttsText').value.trim();
+      const status = document.getElementById('statusMessage');
+
+      if (!apiKey) {
+        status.innerHTML = `<span style="color: #e74c3c;">⚠️ Vui lòng nhập ElevenLabs API Key để tạo giọng!</span>`;
+        return;
+      }
+      if (!text) {
+        status.innerText = "Vui lòng nhập nội dung thoại.";
+        return;
+      }
+
+      try {
+        setLoading(true);
+        status.innerText = "Đang tổng hợp giọng nói qua ElevenLabs API...";
+        initAudioContext();
+
+        // 1. Fetch âm thanh thô
+        const arrayBuffer = await fetchElevenLabsTTS(text, apiKey, PRESETS[currentPreset]);
+        audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+        status.innerText = "Đang áp dụng hiệu ứng âm sắc & phát...";
+        startAudioPlayback();
+      } catch (err) {
+        console.error(err);
+        status.innerHTML = `<span style="color: #e74c3c;">Lỗi: ${err.message}</span>`;
+        setLoading(false);
+      }
+    }
+
+    function startAudioPlayback() {
+      sourceNode = audioCtx.createBufferSource();
+      sourceNode.buffer = audioBuffer;
+
+      // Áp dụng Speed & Pitch
+      const speed = parseFloat(document.getElementById('rateSlider').value);
+      const pitchOffset = parseFloat(document.getElementById('pitchSlider').value);
+      
+      // Chỉnh playbackRate
+      sourceNode.playbackRate.value = speed * Math.pow(2, pitchOffset / 24);
+
+      // Low/High Shelf Filter định hình âm sắc
+      const toneFilter = audioCtx.createBiquadFilter();
+      toneFilter.type = currentPreset === 'p2' ? "lowshelf" : "peaking";
+      toneFilter.frequency.value = currentPreset === 'p2' ? 160 : 2500;
+      toneFilter.gain.value = currentPreset === 'p2' ? 8.0 : 2.0;
+
+      // Reverb / Metallic Delay Node
+      const convolver = audioCtx.createConvolver();
+      convolver.buffer = createMetallicImpulseResponse(audioCtx);
+
+      // Wet / Dry Gain
+      const wetVal = parseFloat(document.getElementById('reverbSlider').value);
+      const wetGain = audioCtx.createGain();
+      wetGain.gain.value = wetVal;
+
+      const dryGain = audioCtx.createGain();
+      dryGain.gain.value = 1.0 - (wetVal * 0.4);
+
+      // Visualizer Analyser
+      analyserNode = audioCtx.createAnalyser();
+      analyserNode.fftSize = 256;
+
+      // MediaStreamDestination để ghi lại file cho nút Download
+      const dest = audioCtx.createMediaStreamDestination();
+      const recorder = new MediaRecorder(dest.stream);
+      let chunks = [];
+
+      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.onstop = () => {
+        processedBlob = new Blob(chunks, { type: 'audio/wav' });
+        document.getElementById('downloadBtn').disabled = false;
+      };
+      recorder.start();
+
+      // Kết nối audio routing graph:
+      // Source -> toneFilter -> Dry -> Analyser -> Output
+      //                     \-> Convolver -> Wet -> Analyser
+      sourceNode.connect(toneFilter);
+      
+      toneFilter.connect(dryGain);
+      toneFilter.connect(convolver);
+      convolver.connect(wetGain);
+
+      dryGain.connect(analyserNode);
+      wetGain.connect(analyserNode);
+
+      analyserNode.connect(audioCtx.destination);
+      analyserNode.connect(dest);
+
+      sourceNode.onended = () => {
+        stopAudio();
+        recorder.stop();
+      };
+
+      sourceNode.start(0);
+      isPlaying = true;
+      setLoading(false);
+      updatePlayBtnState(true);
+      drawWaveform();
+      document.getElementById('statusMessage').innerText = `Đang phát: ${PRESETS[currentPreset].name}`;
+    }
+
+    function stopAudio() {
+      if (sourceNode) {
+        try { sourceNode.stop(); } catch(e) {}
+        sourceNode.disconnect();
+      }
+      isPlaying = false;
+      updatePlayBtnState(false);
+      document.getElementById('statusMessage').innerText = "Đã dừng.";
+    }
+
+    function updatePlayBtnState(playing) {
+      const btnText = document.getElementById('playBtnText');
+      if (playing) {
+        btnText.innerText = "Tạm dừng";
+      } else {
+        btnText.innerText = "Tạo âm & Nghe thử";
+      }
+    }
+
+    function setLoading(isLoading) {
+      const btn = document.getElementById('playBtn');
+      btn.disabled = isLoading;
+      if (isLoading) {
+        document.getElementById('playBtnText').innerText = "Đang xử lý...";
+      }
+    }
+
+    /* =========================================================================
+       5. TRỰC QUAN HÓA SÓNG ÂM TRÊN CANVAS
+       ========================================================================= */
+    const canvas = document.getElementById('waveformCanvas');
+    const canvasCtx = canvas.getContext('2d');
+
+    function drawWaveform() {
+      if (!isPlaying || !analyserNode) {
+        // Clear canvas về trạng thái tĩnh
+        canvasCtx.fillStyle = '#0a0b10';
+        canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+
+      requestAnimationFrame(drawWaveform);
+      const bufferLength = analyserNode.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      analyserNode.getByteTimeDomainData(dataArray);
+
+      canvasCtx.fillStyle = '#0c0d12';
+      canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+      canvasCtx.lineWidth = 2.5;
+      canvasCtx.strokeStyle = currentPreset === 'p2' ? '#d35400' : '#f39c12';
+      canvasCtx.beginPath();
+
+      const sliceWidth = canvas.width * 1.0 / bufferLength;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        const v = dataArray[i] / 128.0;
+        const y = v * (canvas.height / 2);
+        if (i === 0) canvasCtx.moveTo(x, y);
+        else canvasCtx.lineTo(x, y);
+        x += sliceWidth;
+      }
+
+      canvasCtx.lineTo(canvas.width, canvas.height / 2);
+      canvasCtx.stroke();
+    }
+
+    /* =========================================================================
+       6. TẢI FILE ÂM THANH (.WAV / .WEBM ĐÃ QUA FILTER)
+       ========================================================================= */
+    function handleDownload() {
+      if (!processedBlob) return;
+      const url = URL.createObjectURL(processedBlob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `Giong_Voice_${currentPreset}_${Date.now()}.wav`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+    }
+
+    // Resize canvas đúng độ phân giải
+    window.addEventListener('resize', resizeCanvas);
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = 70;
+    }
+    resizeCanvas();
+    applyPreset('p1');
+  </script>
+</body>
+</html>
